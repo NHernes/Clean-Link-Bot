@@ -8,8 +8,10 @@ import time
 from pysafebrowsing import SafeBrowsing
 import config
 
+#defining global variables
 old_karma=0
 
+#function for sending karam updates via webex --> totally optional and not relevant for the core function of the bot
 def info_karma():
     global old_karma
 
@@ -51,7 +53,7 @@ def info_karma():
         pass
 
 
-
+#Preparing OAuth handshake
 reddit = praw.Reddit(
     client_id=config.client_id,
     client_secret=config.client_secret,
@@ -61,22 +63,31 @@ reddit = praw.Reddit(
     ratelimit_seconds=700
 )
 
+#see if handshake worked
 print(reddit.user.me())
 
+#defining the subreddits in which the bot shall monitor comments
 sub_liste_deutsch=config.sub_liste_deutsch
 
 sub_liste_eng=config.sub_liste_eng
 
 
-
+#joining both the English and German lists together
 subreddit = reddit.subreddit("+".join(sub_liste_deutsch+sub_liste_eng))
 for comment in subreddit.stream.comments(skip_existing=True):
     print("Ich arbeite")
+
+    #Making the commentv pulled countable
     body=comment.body.split()
 
+    #I only analyse comments shorter than 50 words at the moment
     if len(body)<50:
+
+        #analyze wether a URL is hyperlinked and exluding some reddit-specific links
         if ("[") in comment.body and ("](") in comment.body and ("https") in comment.body and ("(") in comment.body and (")") in comment.body and "message/" not in comment.body and "r/" not in comment.body:
             link=comment.body
+
+            #cleaning comment for URL
             result = re.search(']((.*))', link)
             try:
                 link=result.group(1)
@@ -102,17 +113,19 @@ for comment in subreddit.stream.comments(skip_existing=True):
 
                 zusammengefügt=f"({link})"
                 body=comment.body
+
+                #check wether redditor included the plain URL additionally to the hyperlinked text
                 if body.count(link)>1:
                     continue
 
 
-                ###Safety-Analyse###
+                ###Analyzing threat level of URL
                 key = SafeBrowsing(config.google_safe_api)
                 lookup = key.lookup_urls([link])
 
                 ergebnis=lookup[link]["malicious"]
 
-
+                #differentiate subreddits to reply in correct language
                 if zusammengefügt in comment.body and subreddit_name in sub_liste_deutsch:
 
                     if ergebnis==True:
