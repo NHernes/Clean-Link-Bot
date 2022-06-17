@@ -91,13 +91,12 @@ def subreddits():
     #joining both the English and German lists together
     subreddit = reddit.subreddit("+".join(sub_liste_deutsch+sub_liste_eng))
 
-handshake()
-
 
 def main():
     zähler=0
     global subreddit,sub_liste_deutsch,sub_liste_eng,reddit,sleep_hours,odd_numb,reddit
     
+    handshake()
     subreddits()
     
     for comment in subreddit.stream.comments(skip_existing=True):
@@ -249,7 +248,6 @@ while True:
 
     except Forbidden as f:
         print(f)
-        handshake()
 
         url="https://webexapis.com/v1/messages"
 
@@ -268,9 +266,7 @@ while True:
         continue
 
     except Exception as e:
-        
         print(e)
-        handshake()
 
         url="https://webexapis.com/v1/messages"
 
